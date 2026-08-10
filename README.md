@@ -42,7 +42,7 @@ This project evaluates prompt intent at runtime using semantic vector embeddings
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/semantic-llm-router.git
+git clone https://github.com/DarshanBhabad/SLR_-semantic_LLM_routing-.git
 cd semantic-llm-router
 ```
 
