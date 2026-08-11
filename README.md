@@ -109,20 +109,12 @@ AI Response   : The capital city of France is Paris.
 
 ## 🐞 Issues Faced & Resolutions
 
-While building this, three separate issues surfaced across two libraries (`litellm` / `semantic-router`) and one provider (`google-genai`). Each is documented here for reference and interview prep.
+While building this, three separate issues surfaced across two libraries (`litellm` / `semantic-router`) and one provider (`google-genai`). Each is documented here for reference
 
 ### 1. Gemini embedding model `404 Not Found`
-**Symptom:**
-```
-litellm.exceptions.NotFoundError: GeminiException - {
-  "code": 404,
-  "message": "models/embedding-001 is not found for API version v1beta, or is not supported for embedContent."
-}
-```
 
-**Root cause:** `router.py` had **two** `encoder = LiteLLMEncoder(...)` assignments. The second one (`name="gemini/embedding-001"`) silently overwrote the first, and `embedding-001` is a legacy Google embedding model that was fully shut down on **Oct 30, 2025**. The other candidate name in the file, `text-embedding-004`, was also deprecated (shutdown Jan 14, 2026) — so neither would have worked.
 
-**Fix:** Removed the duplicate encoder block and pointed the single remaining encoder at the current model:
+**Fix:**  the single remaining encoder at the current model:
 ```python
 encoder = LiteLLMEncoder(
     name="gemini/gemini-embedding-001",
@@ -130,9 +122,6 @@ encoder = LiteLLMEncoder(
 )
 ```
 
-**Lesson:** Watch for variable shadowing when a file has been iterated on multiple times (commented-out blocks left behind + a second live definition below it). Also: Google rotates/deprecates embedding and generation model IDs frequently — always check https://ai.google.dev/gemini-api/docs/deprecations rather than trusting a model name from memory or an old tutorial.
-
----
 
 ### 2. `ValueError: Index is not ready.`
 **Symptom:**
@@ -153,9 +142,6 @@ router = SemanticRouter(
 )
 ```
 
-**Lesson:** Library "quickstart" behavior isn't always the default constructor behavior — always check the current docs/examples for required flags rather than assuming defaults, especially for libraries that changed their API between versions (the docstrings/warnings in the terminal — `WARNING semantic_router No index provided. Using default LocalIndex.` — were actually a clue here).
-
----
 
 ### 3. Gemini generation model `404 — model no longer available`
 **Symptom:**
@@ -175,9 +161,7 @@ response = gemini_client.models.generate_content(
 )
 ```
 
-**Lesson:** Don't just check a deprecation table and assume you're safe — actually test the call. Google's Gemini API model availability can be more restrictive in practice than the documented shutdown dates suggest, especially for newer projects/API keys. Centralizing model names in one config constant (rather than hardcoding strings inline) makes this kind of churn much cheaper to fix next time.
 
----
 
 ## 📂 Project Structure
 
