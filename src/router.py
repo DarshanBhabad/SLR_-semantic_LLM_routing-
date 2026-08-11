@@ -4,11 +4,19 @@ from groq import Groq
 # from semantic_router import Route
 # from semantic_router.layer import RouteLayer
 from semantic_router import Route, SemanticRouter
-from semantic_router.encoders import GeminiEncoder
+from semantic_router.encoders import LiteLLMEncoder
+# In src/router.py
+from src.config import GEMINI_API_KEY, GROQ_API_KEY
 
 # Initialize SDK Clients
-gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+groq_client = Groq(api_key=GROQ_API_KEY)
+
+# ...
+
+# # Initialize SDK Clients
+# gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+# groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # Define Route Intents
 chitchat_route = Route(
@@ -30,8 +38,11 @@ coding_route = Route(
 )
 
 # Initialize Route Layer
-encoder = GeminiEncoder()
-router = SemanticRouter(encoder=encoder, routes=[chitchat_route, coding_route])
+encoder = LiteLLMEncoder(
+    name="gemini/gemini-embedding-001",
+    api_key=GEMINI_API_KEY
+)
+router = SemanticRouter(encoder=encoder, routes=[chitchat_route, coding_route], auto_sync="local")
 
 # Handler Functions
 def call_groq_fast(prompt: str) -> str:
@@ -50,7 +61,7 @@ def call_gemini_advanced(prompt: str) -> str:
     """Routes high-complexity tasks to Gemini 1.5 Flash."""
     try:
         response = gemini_client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="gemini-2.5-flash",
             contents=prompt,
         )
         return response.text
